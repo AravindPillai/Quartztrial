@@ -1,0 +1,23 @@
+driverDelegateClass
+org.quartz.scheduler.instanceName=sample
+org.quartz.scheduler.instanceId=AUTO
+org.quartz.threadPool.class=org.quartz.simpl.SimpleThreadPool
+org.quartz.threadPool.threadCount=3
+# org.quartz.jobStore.class = org.springframework.scheduling.quartz.LocalDataSourceJobStore
+org.quartz.jobStore.class=org.springframework.scheduling.quartz.JobStoreTX
+org.quartz.jobStore.driverDelegateClass = org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+org.quartz.scheduler.jobFactory.class = org.quartz.simpl.SimpleJobFactory
+org.quartz.jobStore.tablePrefix=QRTZ_
+org.quartz.jobStore.useProperties=true
+
+# org.quartz.jobStore.dataSource=quartzDataSource
+org.quartz.plugin.jobInitializer.scanInterval = 0 
+org.quartz.jobStore.isClustered=true
+org.quartz.jobStore.clusterCheckinInterval=20000
+# org.quartz.dataSource.quartzDataSource.provider=hikaricp
+# org.quartz.dataSource.quartzDataSource.URL = jdbc:mysql://localhost:3306/quartz
+# org.quartz.dataSource.quartzDataSource.driver = com.mysql.jdbc.Driver
+# serverTimezone=UTC&characterEncoding=UTF-8
+# org.quartz.dataSource.quartzDataSource.user = root
+# org.quartz.dataSource.quartzDataSource.password = root
+# org.quartz.jobStore.isClustered = true
