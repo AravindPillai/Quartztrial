@@ -20,7 +20,10 @@ public class TrialJob implements Job {
       
         
         JobDataMap dataMap = context.getJobDetail().getJobDataMap();
-        logger.info("Job ** {} ** fired @ {} with {} and {}", context.getJobDetail().getKey().getName(), context.getFireTime(),dataMap.get("param1"),dataMap.get("param2"));
+        if(dataMap.get("param1")!=null && dataMap.get("param2")!=null)
+        {
+            logger.info("Job ** {} ** fired @ {} with {} and {}", context.getJobDetail().getKey().getName(), context.getFireTime(),dataMap.get("param1"),dataMap.get("param2"));
+        }
         try {
             Thread.sleep(EXECUTION_TIME);
         } catch (InterruptedException e) {

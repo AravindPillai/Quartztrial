@@ -1,5 +1,8 @@
 package com.quartz.apiquartz.controller;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.sql.DataSource;
 
 import org.quartz.JobBuilder;
@@ -108,28 +111,29 @@ public class QuartzController {
       JobDetail jobDetail = JobBuilder.newJob(TrialJob.class)
                 .withIdentity(request.getJobGroup(), request.getJobName())
                 .usingJobData("param1", request.getJobGroup())
-                .usingJobData("param2", request.getJobName())
+                .usingJobData("param2", request.getJobName()).storeDurably()
                 .build();
 
 
         SimpleTrigger trigger = TriggerBuilder.newTrigger().withIdentity("Qrtz_Trigger").forJob(jobDetail).startNow().withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).repeatForever()).build();
+        Set<SimpleTrigger> tset = new HashSet<SimpleTrigger>();
+        tset.add(trigger);
+        // SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
+        // schedulerFactoryBean.setConfigLocation(new ClassPathResource("quartz.properties"));
 
-        SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
-        schedulerFactoryBean.setConfigLocation(new ClassPathResource("quartz.properties"));
-
-        logger.debug("Setting the Scheduler up");
-        schedulerFactoryBean.setJobFactory(springBeanJobFactory());
-        //schedulerFactory.setJobDetails(job);
+        // logger.debug("Setting the Scheduler up");
+        // schedulerFactoryBean.setJobFactory(springBeanJobFactory());
+        // //schedulerFactory.setJobDetails(job);
         //schedulerFactory.setTriggers(trigger);
 
-        // Comment the following line to use the default Quartz job store.
-        schedulerFactoryBean.setDataSource(dataSource);
-        //Scheduler scheduler1=schedulerFactoryBean.
-        SchedulerFactory schedulerFactory = new StdSchedulerFactory();
-        Scheduler scheduler = schedulerFactory.getScheduler();
+        // // Comment the following line to use the default Quartz job store.
+        // schedulerFactoryBean.setDataSource(dataSource);
+        // //Scheduler scheduler1=schedulerFactoryBean.
+        // SchedulerFactory schedulerFactory = new StdSchedulerFactory();
+        // Scheduler scheduler = schedulerFactory.getScheduler();
          // Schedule the job with the trigger
-        scheduler.scheduleJob(jobDetail, trigger);
-        scheduler.start();
+        scheduler.scheduleJob(jobDetail, tset,true);
+        //scheduler.start();
 
         return new ResponseEntity<>(request,HttpStatus.OK);
       
