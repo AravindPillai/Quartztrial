@@ -58,8 +58,8 @@ public class SpringQrtzScheduler {
 
         logger.debug("Setting the Scheduler up");
         schedulerFactory.setJobFactory(springBeanJobFactory());
-        schedulerFactory.setJobDetails(job);
-        schedulerFactory.setTriggers(trigger);
+       // schedulerFactory.setJobDetails(job);
+        //schedulerFactory.setTriggers(trigger);
 
         // Comment the following line to use the default Quartz job store.
         schedulerFactory.setDataSource(quartzDataSource);
@@ -86,7 +86,6 @@ public class SpringQrtzScheduler {
 
         int frequencyInSec = 10;
         logger.info("Configuring trigger to fire every {} seconds", frequencyInSec);
-
         trigger.setRepeatInterval(frequencyInSec * 1000);
         trigger.setRepeatCount(SimpleTrigger.REPEAT_INDEFINITELY);
         trigger.setName("Qrtz_Trigger");

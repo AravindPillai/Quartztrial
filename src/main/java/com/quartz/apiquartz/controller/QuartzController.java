@@ -44,7 +44,7 @@ import com.quartz.apiquartz.config.AutoWiringSpringBeanJobFactory;
 @Controller
 public class QuartzController {
 
-    @Autowired
+    //@Autowired
     org.quartz.Scheduler scheduler;
 
     @Autowired
@@ -55,6 +55,15 @@ public class QuartzController {
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Autowired
+    SchedulerFactoryBean schedulerFactoryBean;
+
+    @Autowired
+    JobDetailFactoryBean jobDetailFactoryBean;
+
+    @Autowired
+    SimpleTriggerFactoryBean simpleTriggerFactoryBean;
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -101,23 +110,26 @@ public class QuartzController {
     }
 
     @RequestMapping(value = "/startJob", method = RequestMethod.POST)
-    public ResponseEntity startJob(@RequestBody StartJobRequest request) throws SchedulerException 
+    public ResponseEntity startJob(@RequestBody StartJobRequest request) throws Exception 
     {
 
         System.out.println("Starting job");
-        JobDataMap jobDataMap = new JobDataMap();
+        JobDataMap jobDataMap = jobDetailFactoryBean.getJobDataMap();
         jobDataMap.put("myKey", "myValue");
-     
-      JobDetail jobDetail = JobBuilder.newJob(TrialJob.class)
-                .withIdentity(request.getJobGroup(), request.getJobName())
-                .usingJobData("param1", request.getJobGroup())
-                .usingJobData("param2", request.getJobName()).storeDurably()
-                .build();
+        jobDataMap.put("param1", request.getJobGroup());
+        jobDataMap.put("param2", request.getJobName());
+        
+        JobDetail jobDetail = jobDetailFactoryBean.getObject();
+    //   JobDetail jobDetail = JobBuilder.newJob(TrialJob.class)
+    //             .withIdentity(request.getJobGroup(), request.getJobName())
+    //             .usingJobData("param1", request.getJobGroup())
+    //             .usingJobData("param2", request.getJobName()).storeDurably()
+    //             .build();
 
 
-        SimpleTrigger trigger = TriggerBuilder.newTrigger().withIdentity("Qrtz_Trigger").forJob(jobDetail).startNow().withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).repeatForever()).build();
-        Set<SimpleTrigger> tset = new HashSet<SimpleTrigger>();
-        tset.add(trigger);
+       // SimpleTrigger trigger = TriggerBuilder.newTrigger().withIdentity("Qrtz_Trigger").forJob(jobDetail).startNow().withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).repeatForever()).build();
+        //Set<SimpleTrigger> tset = new HashSet<SimpleTrigger>();
+        //tset.add(trigger);
         // SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
         // schedulerFactoryBean.setConfigLocation(new ClassPathResource("quartz.properties"));
 
@@ -132,14 +144,74 @@ public class QuartzController {
         // SchedulerFactory schedulerFactory = new StdSchedulerFactory();
         // Scheduler scheduler = schedulerFactory.getScheduler();
          // Schedule the job with the trigger
+        schedulerFactoryBean.setJobDetails(jobDetail);
+        schedulerFactoryBean.setTriggers(simpleTriggerFactoryBean.getObject());
+        Set<SimpleTrigger> tset = new HashSet<SimpleTrigger>();
+        schedulerFactoryBean.afterPropertiesSet();
+        tset.add(simpleTriggerFactoryBean.getObject());
+         scheduler = schedulerFactoryBean.getScheduler();
         scheduler.scheduleJob(jobDetail, tset,true);
-        //scheduler.start();
+        scheduler.start();
 
         return new ResponseEntity<>(request,HttpStatus.OK);
       
     }
 
+    @RequestMapping(value = "/deleteJob", method = RequestMethod.POST)
+    public ResponseEntity deleteJob(@RequestBody StartJobRequest request) {
+       
+        try {
+            JobKey jobKey = new JobKey(request.getJobName(), request.getJobGroup());
+            scheduler.deleteJob(jobKey);
+            String msg = "Deleted job with key - " + request.getJobGroup() + "." + request.getJobName();
+          
+        } catch (SchedulerException e) {
+            String errorMsg =
+                    String.format(
+                            "Could not find job with key - %s.%s to Delete due to error -  %s",
+                            request.getJobGroup(), request.getJobName(), e.getLocalizedMessage());
+          
+        }
+        return new ResponseEntity<>(null,HttpStatus.OK);
+    }
     
+
+    @RequestMapping(value = "/pauseJob", method = RequestMethod.POST)
+    public ResponseEntity pauseJob(@RequestBody StartJobRequest request) {
+       
+        try {
+            JobKey jobKey = new JobKey(request.getJobName(), request.getJobGroup());
+            scheduler.pauseJob(jobKey);
+            String msg = "Paused job with key - " + request.getJobGroup() + "." + request.getJobName();
+         
+        } catch (SchedulerException e) {
+            String errorMsg =
+                    String.format(
+                            "Could not find job with key - %s.%s  due to error -  %s",
+                            request.getJobGroup(), request.getJobName(), e.getLocalizedMessage());
+           
+        }
+        return new ResponseEntity<>(null,HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/resumeJob", method = RequestMethod.POST)
+    public ResponseEntity resumeJob(@RequestBody StartJobRequest request) {
+      
+        try {
+            JobKey jobKey = new JobKey(request.getJobName(), request.getJobGroup());
+            scheduler.resumeJob(jobKey);
+            String msg = "Resumed job with key - " + request.getJobGroup() + "." + request.getJobName();
+          
+        } catch (SchedulerException e) {
+            String errorMsg =
+                    String.format(
+                            "Could not find job with key - %s.%s  due to error -  %s",
+                            request.getJobGroup(), request.getJobName(), e.getLocalizedMessage());
+         
+        }
+        return new ResponseEntity<>(null,HttpStatus.OK);
+    }
+
     public SpringBeanJobFactory springBeanJobFactory() {
         AutoWiringSpringBeanJobFactory jobFactory = new AutoWiringSpringBeanJobFactory();
         logger.debug("Configuring Job factory");
